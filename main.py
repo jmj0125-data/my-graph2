@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import numpy as np
 
 # 페이지 설정
 st.set_page_config(
@@ -199,7 +200,7 @@ st.plotly_chart(fig3, width="stretch")
 
 
 # 가장 많이 몰려 있는 구간 계산
-counts, bin_edges = pd.np.histogram(
+counts, bin_edges = np.histogram(
     hist_df["total_audi"],
     bins=20
 )
