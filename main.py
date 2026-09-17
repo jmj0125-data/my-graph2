@@ -12,10 +12,11 @@ st.set_page_config(
 
 st.title("영화 데이터 그래프 도감 2 - 분포와 관계")
 
-# 데이터 불러오기
+# 데이터 주소
 DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_movies.csv"
 
 
+# 데이터 불러오기
 @st.cache_data
 def load_data():
     df = pd.read_csv(DATA_URL)
@@ -27,7 +28,7 @@ def load_data():
         errors="coerce"
     )
 
-    # 장르: 여러 장르가 있으면 첫 번째 장르만 사용
+    # 여러 장르가 있으면 첫 번째 장르만 사용
     df["genre"] = (
         df["genre"]
         .fillna("기타")
@@ -166,7 +167,6 @@ st.text_input(
 st.markdown("---")
 st.subheader("3. 영화별 총 관객 분포")
 
-# 총 관객이 0명인 데이터는 제외
 hist_df = df[
     df["total_audi"] > 0
 ][["movieNm", "total_audi"]].copy()
@@ -199,7 +199,7 @@ fig3.update_layout(
 st.plotly_chart(fig3, width="stretch")
 
 
-# 가장 많이 몰려 있는 구간 계산
+# 가장 많이 몰려 있는 구간
 counts, bin_edges = np.histogram(
     hist_df["total_audi"],
     bins=20
@@ -210,14 +210,13 @@ max_bin_index = counts.argmax()
 bin_start = bin_edges[max_bin_index]
 bin_end = bin_edges[max_bin_index + 1]
 
-# 가장 관객이 많은 영화
+# 총 관객이 가장 많은 영화
 max_audience_row = hist_df.loc[
     hist_df["total_audi"].idxmax()
 ]
 
 max_movie = max_audience_row["movieNm"]
 max_audience = max_audience_row["total_audi"]
-
 
 st.markdown("### 그래프에서 알 수 있는 것")
 
@@ -236,6 +235,67 @@ st.markdown("**이 그래프로 알 수 있는 것:**")
 st.text_input(
     "그래프 3 설명",
     key="graph3_note",
+    placeholder="이 그래프로 알 수 있는 것을 입력하세요.",
+    label_visibility="collapsed"
+)
+
+
+# ==================================================
+# 그래프 4. 개봉일 스크린수와 총 관객의 관계
+# ==================================================
+
+st.markdown("---")
+st.subheader("4. 개봉일 스크린수와 총 관객의 관계")
+
+scatter_df = df[
+    ["movieNm", "genre", "first_scrn", "total_audi"]
+].copy()
+
+# 필요한 값이 없는 행 제거
+scatter_df = scatter_df[
+    scatter_df["movieNm"].notna() &
+    scatter_df["genre"].notna() &
+    (scatter_df["first_scrn"] > 0) &
+    (scatter_df["total_audi"] > 0)
+]
+
+fig4 = px.scatter(
+    scatter_df,
+    x="first_scrn",
+    y="total_audi",
+    color="genre",
+    hover_name="movieNm",
+    labels={
+        "first_scrn": "개봉일 스크린수",
+        "total_audi": "총 관객",
+        "genre": "장르"
+    },
+    title="개봉일 스크린수와 총 관객의 관계"
+)
+
+fig4.update_traces(
+    hovertemplate=(
+        "<b>%{hovertext}</b><br>"
+        "개봉일 스크린수: %{x:,.0f}개<br>"
+        "총 관객: %{y:,.0f}명"
+        "<extra></extra>"
+    )
+)
+
+fig4.update_layout(
+    xaxis_title="개봉일 스크린수",
+    yaxis_title="총 관객",
+    margin=dict(t=60, b=20, l=20, r=20),
+    legend_title="장르"
+)
+
+st.plotly_chart(fig4, width="stretch")
+
+st.markdown("---")
+st.markdown("**이 그래프로 알 수 있는 것:**")
+st.text_input(
+    "그래프 4 설명",
+    key="graph4_note",
     placeholder="이 그래프로 알 수 있는 것을 입력하세요.",
     label_visibility="collapsed"
 )
